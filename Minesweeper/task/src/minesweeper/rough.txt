@@ -1,0 +1,242 @@
+package minesweeper;
+
+import java.util.*;
+
+public class raf {
+
+    public void xs() {
+
+        MinesweeperField field = new MinesweeperField(9,9);
+
+        field.putMines();
+        field.displayField();
+
+        Game game = new Game(field);
+
+        while (game.isPlaying()) {
+            game.setOrDelete(field, field.getField());
+        }
+
+        System.out.println("Congratulations! You found all the mines!");
+
+    }
+
+}
+
+class Game {
+    private List<Integer[]> mineLocation = new ArrayList<>();
+    private LinkedList<Integer[]> markLocation = new LinkedList<>();
+
+    public Game(MinesweeperField minesweeperField) {
+
+        char[][] field = minesweeperField.getField();
+
+        int indexi = 0;
+        for (char[] row : field) {
+            int indexj = 0;
+            for (char element : row) {
+                if (element == minesweeperField.getMine()) {
+                    mineLocation.add(new Integer[]{indexi, indexj});
+                }
+                indexj++;
+            }
+            indexi++;
+        }
+    }
+
+    public boolean isPlaying() {
+        if (markLocation.size() < mineLocation.size()) return true;
+
+        for (Integer[] marks : markLocation) {
+            for (Integer[] mines : mineLocation) {
+                if (checkSame(marks, mines)) {
+                    break;
+                }
+                if (Arrays.equals(mines, mineLocation.get(mineLocation.size() - 1))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean checkSame(Integer[] marks, Integer[] mines) {
+
+        for (int i = 0; i < marks.length; i++) {
+            if (!Objects.equals(marks[i], mines[i])) break;
+
+            if (i == marks.length - 1) return true;
+        }
+
+        return false;
+
+    }
+
+    public void setOrDelete(MinesweeperField object, char[][] field) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Set/delete mines marks (x and y coordinates): ");
+
+        int y = scanner.nextInt() - 1;
+        int x = scanner.nextInt() - 1;
+
+        if (field[x][y] == '.' || field[x][y] == 'X') {
+            field[x][y] = '*';
+            this.markLocation.add(new Integer[]{x, y});
+            object.displayField();
+        } else if (field[x][y] == '*') {
+            if (mineCheck(this.mineLocation, new Integer[]{x, y})) {
+                field[x][y] = 'X';
+            } else {
+                field[x][y] = '.';
+            }
+
+            deleteNode(this.markLocation, x, y);
+
+            object.displayField();
+        } else {
+            System.out.println("There is a number here!");
+        }
+
+    }
+
+    public void deleteNode(LinkedList<Integer[]> markLocation, int x, int y) {
+        for (int i = 0; i < markLocation.size(); i++) {
+            if (Arrays.equals(markLocation.get(i), new Integer[]{x, y})) {
+                markLocation.remove(i);
+                return;
+            }
+        }
+    }
+
+    public boolean mineCheck(List<Integer[]> mineList, Integer[] array) {
+        for (Integer[] i : mineList) {
+            if (Arrays.equals(i, array)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Integer[]> getMarkLocation() {
+        return this.markLocation;
+    }
+
+    public List<Integer[]> getMineLocation() {
+        return this.mineLocation;
+    }
+}
+
+class ab {
+    private final int row;
+    private final int column;
+    private final char mine = 'X';
+    private final char safeField = '.';
+    private char[][] displayField;
+    private final char[][] mainField;
+    private int mines;
+
+    public ab(int row, int column) {
+        this.row = row;
+        this.column = column;
+        this.mainField = new char[this.row][this.column];
+        this.displayField = new char[this.row][this.column];
+    }
+
+    public void putMines() {
+
+        System.out.print("How many mines do you want on the field? ");
+        Scanner scanner = new Scanner(System.in);
+        this.mines = scanner.nextInt();
+
+        int mineNumber = mines;
+
+        while (mineNumber > 0) {
+            for (int i = 0; i < this.row; i++) {
+                Random random = new Random();
+                int mineIndex = random.nextInt(this.row + 1);
+                for (int j = 0; j < this.column; j++) {
+                    if (this.field[i][j] != this.mine)
+                        this.field[i][j]= this.safeField;
+                }
+                if (mineNumber == 0) {
+                    continue;
+                }
+                if (mineIndex != this.row) {
+                    if (this.mainField[i][mineIndex] == this.safeField) {
+                        this.mainField[i][mineIndex] = this.mine;
+                        mineNumber--;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < this.row; i++) {
+            for (int j = 0; j < this.column; j++) {
+                if (this.mainField[i][j] != this.mine) {
+                    this.mainField[i][j] = checkAround(this.mainField, i, j);
+                }
+            }
+        }
+
+    }
+
+    private char checkAround(char[][] field, int x, int y) {
+        int numberOfMines = 48;
+
+        for (int i = x - 1; i <= x + 1; i++) {
+            for (int j = y - 1; j <= y + 1; j++) {
+                if (i == x && j == y) continue;
+                try {
+                    if (field[i][j] == this.mine) {
+                        numberOfMines++;
+                    }
+                } catch (Exception ignored) { }
+
+            }
+        }
+
+        return numberOfMines > 48 ? ((char) numberOfMines) : this.safeField;
+
+    }
+
+    public void displayField() {
+        System.out.println();
+        System.out.println(" |123456789|");
+        System.out.println("-|---------|");
+        byte i = 1;
+        for (char[] eachRow : this.field) {
+            System.out.print(i++ + "|");
+            for (char element : eachRow) {
+                if (element != mine) {
+                    System.out.print(element);
+                }
+                else System.out.print(safeField);
+            }
+            System.out.println("|");
+        }
+        System.out.println("-|---------|");
+    }
+
+    public int getMines() {
+        return this.mines;
+    }
+
+    public char[][] getField() {
+        return this.field;
+    }
+
+    public char getMine() {
+        return this.mine;
+    }
+
+    public char getSafeField() {
+        return this.safeField;
+    }
+
+    public void setField(char element, int row, int column) {
+        this.field[row][column] = element;
+    }
+
+}
